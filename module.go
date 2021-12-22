@@ -98,7 +98,7 @@ func (d *DateModule) Exec() string {
 
 func formattedDate() (d, t string) {
 	now := time.Now()
-	d = now.Format("Mon Jan 2 2006")
+	d = now.Format("Mon Jan 2, 2006")
 	t = now.Format("15:04:05")
 	return
 }
@@ -117,15 +117,17 @@ func (b *BatteryModule) Exec() string {
 	e := "BAT_MOD_ERR"
 
 	bat := fmt.Sprintf("/sys/class/power_supply/%s", b.device)
-	capacity, err := ioutil.ReadFile(bat + "/capacity")
+	capacityb, err := ioutil.ReadFile(bat + "/capacity")
 	if err != nil {
 		return e
 	}
-	status, err := ioutil.ReadFile(bat + "/status")
+	statusb, err := ioutil.ReadFile(bat + "/status")
 	if err != nil {
 		return e
 	}
-	return fmt.Sprintf("%s %s%%", batIcon(string(capacity), string(status)), string(capacity))
+	capacity := strings.TrimSpace(string(capacityb))
+	status := strings.TrimSpace(string(statusb))
+	return fmt.Sprintf("%s %s%%", batIcon(capacity, status), capacity)
 }
 
 const (
@@ -136,9 +138,7 @@ const (
 
 // return an icon for the battery
 func batIcon(cap, stat string) string {
-	capacity, _ := strconv.ParseInt(strings.TrimSpace(cap), 10, 64)
-	println(capacity)
-	stat = strings.TrimSpace(stat)
+	capacity, _ := strconv.ParseInt(cap, 10, 64)
 	switch {
 	case stat == STAT_CHARGING:
 		return ICO_BAT_POW
