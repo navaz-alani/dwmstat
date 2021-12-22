@@ -83,8 +83,6 @@ func (b *StatusBar) Udpate(signalStream chan Signal) {
 	modules := make(map[string]Module)
 	// channels through which modules receive events
 	moduleEventStreams := make(map[string]chan Event)
-	// mapping between a signal and names of modules to update
-	signals := make(map[int][]string)
 
 	// collect all modules
 	for _, m := range b.Modules {
@@ -94,7 +92,6 @@ func (b *StatusBar) Udpate(signalStream chan Signal) {
 		}
 		modules[mod] = m
 		moduleEventStreams[mod] = make(chan Event)
-		signals[m.UpdateSig()] = append(signals[m.UpdateSig()], mod)
 	}
 
 	outs := make([]string, len(b.Modules)) // outputs produced by modules

@@ -14,8 +14,6 @@ type Module interface {
 	Name() string
 	// Update interval
 	UpdateInterval() time.Duration
-	// Update signal used to trigger module update (-1 if none).
-	UpdateSig() int
 	// Run module and return string to display.
 	Exec() string
 }
@@ -30,12 +28,10 @@ type ScriptedModule struct {
 	command        string   // name of the command to run
 	args           []string // arguments to supply to command
 	updateInterval time.Duration
-	updateSig      int
 }
 
 func (s *ScriptedModule) Name() string                  { return s.name }
 func (s *ScriptedModule) UpdateInterval() time.Duration { return s.updateInterval }
-func (s *ScriptedModule) UpdateSig() int                { return s.updateSig }
 
 //============================
 // Compiled Modules
@@ -45,7 +41,6 @@ type DateModule struct{}
 
 func (d *DateModule) Name() string                  { return "date" }
 func (d *DateModule) UpdateInterval() time.Duration { return time.Second }
-func (d *DateModule) UpdateSig() int                { return -1 }
 func (d *DateModule) Exec() string {
 	date, time := formattedDate()
 	return fmt.Sprintf("%s %s %s %s", ICO_DATE, date, ICO_TIME, time)
@@ -71,7 +66,6 @@ type BatteryModule struct {
 
 func (b *BatteryModule) Name() string                  { return "battery" }
 func (b *BatteryModule) UpdateInterval() time.Duration { return 30 * time.Second }
-func (b *BatteryModule) UpdateSig() int                { return -1 }
 func (b *BatteryModule) Exec() string {
 	e := "BAT_MOD_ERR"
 
