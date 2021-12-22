@@ -175,9 +175,48 @@ var MasterVolumeModule ExternalModule = ExternalModule{
 			log(ERROR, "%s: %s", e, err)
 			return e
 		} else if 0 <= vol && vol < 50 {
-			return ICO_VOL_DOWN + out
+			return ICO_VOL_DOWN + " " + out
 		} else {
-			return ICO_VOL_UP + out
+			return ICO_VOL_UP + " " + out
 		}
+	},
+}
+
+//============================
+
+var RAMUsageModule ExternalModule = ExternalModule{
+	name:           "sys_ram_usage",
+	command:        "sb_ram_usage",
+	kind:           EMK_SCR,
+	updateInterval: 5 * time.Second,
+	postProcess: func(out string) string {
+		e := "EXT_MOD_RAM_ERR"
+
+		parts := strings.Split(out, " ")
+		if len(parts) != 2 {
+			log(ERROR, "%s: malformed script output '%s'", e, out)
+			return e
+		}
+		useds := strings.TrimSpace(parts[0])
+		totals := strings.TrimSpace(parts[1])
+		if used, err := strconv.ParseInt(useds, 10, 64); err != nil {
+			log(ERROR, "%s: invalid used size '%s'", e, useds)
+			return e
+		} else if total, err := strconv.ParseInt(totals, 10, 64); err != nil {
+			log(ERROR, "%s: invalid total size '%s'", e, totals)
+			return e
+		} else {
+			return fmt.Sprintf("%s %d%%", ICO_RES_RAM, 100*used/total)
+		}
+	},
+}
+
+var CPUUsageModule ExternalModule = ExternalModule{
+	name:           "sys_cpu_usage",
+	command:        "sb_cpu_usage",
+	kind:           EMK_SCR,
+	updateInterval: 5 * time.Second,
+	postProcess: func(out string) string {
+		return ICO_RES_CPU + " " + strings.TrimSpace(out)
 	},
 }

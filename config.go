@@ -10,29 +10,34 @@ const (
 // Icons
 const (
 	// DateModule
-	ICO_DATE = " "
-	ICO_TIME = " "
+	ICO_DATE = ""
+	ICO_TIME = ""
 	// BatteryModule
 	ICO_BAT_POW  = ""
-	ICO_BAT_FULL = " (F)"
-	ICO_BAT_0Q   = " "
-	ICO_BAT_1Q   = " "
-	ICO_BAT_2Q   = " "
-	ICO_BAT_3Q   = " "
-	ICO_BAT_4Q   = " "
+	ICO_BAT_FULL = "(F)"
+	ICO_BAT_0Q   = ""
+	ICO_BAT_1Q   = ""
+	ICO_BAT_2Q   = ""
+	ICO_BAT_3Q   = ""
+	ICO_BAT_4Q   = ""
 	// VolumeModule
-	ICO_VOL_MUTE = " "
-	ICO_VOL_DOWN = " "
-	ICO_VOL_UP   = " "
+	ICO_VOL_MUTE = ""
+	ICO_VOL_DOWN = ""
+	ICO_VOL_UP   = ""
+	// ResourcesModule
+	ICO_RES_RAM = ""
+	ICO_RES_CPU = ""
 )
 
 // This is the bar which will be rendered.
 var statusBar StatusBar = StatusBar{
 	Sep: " | ",
 	Modules: []Module{
+		&CPUUsageModule,
+		&RAMUsageModule,
 		&DateModule{},
-		&BatteryModule{"BAT1"},
 		&MasterVolumeModule,
+		&BatteryModule{"BAT1"},
 	},
 	// update the bar whenever a module update is available
 	UpdateBatchSize: 1,
