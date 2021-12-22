@@ -15,12 +15,12 @@ type Signal struct {
 
 func listenSignals(ss chan<- Signal) {
 	if err := os.RemoveAll(SIG_SOCK); err != nil {
-		l.Fatal(err)
+		l.Fatal("socket remove error:", err)
 	}
 
 	sock, err := net.Listen("unix", SIG_SOCK)
 	if err != nil {
-		l.Fatal("listen error:", err)
+		l.Fatal("socket listen error:", err)
 	}
 	defer sock.Close()
 

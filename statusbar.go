@@ -51,20 +51,26 @@ func moduleUpdater(mod Module, evStream chan Event, cb UpdateCallback) {
 		case ev := <-evStream:
 			switch ev {
 			case EV_EXEC: // run without waiting for interval to complete
-				log(INFO, "EV_EXEC - updating module '%s'", mod.Name())
+				if !*production {
+					log(INFO, "EV_EXEC - updating module '%s'", mod.Name())
+				}
 				cb(mod.Exec())
 			case EV_STOP:
 				return
 			}
 		case <-time.After(mod.UpdateInterval()):
-			log(INFO, "INT_EXEC - updating module '%s'", mod.Name())
+			if !*production {
+				log(INFO, "INT_EXEC - updating module '%s'", mod.Name())
+			}
 			cb(mod.Exec())
 		}
 	} else {
 		ev := <-evStream
 		switch ev {
 		case EV_EXEC:
-			log(INFO, "EV_EXEC - updating module '%s'", mod.Name())
+			if !*production {
+				log(INFO, "EV_EXEC - updating module '%s'", mod.Name())
+			}
 			cb(mod.Exec())
 		case EV_STOP:
 			return
