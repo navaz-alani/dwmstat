@@ -13,7 +13,7 @@ type Signal struct {
 	Module string
 }
 
-func listenAndNotify(ss chan<- Signal) {
+func listenSignals(ss chan<- Signal) {
 	if err := os.RemoveAll(SIG_SOCK); err != nil {
 		l.Fatal(err)
 	}

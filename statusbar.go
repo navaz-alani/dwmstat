@@ -23,10 +23,11 @@ type StatusBar struct {
 	UpdateMinTime time.Duration
 }
 
-func (b *StatusBar) Exec() {
+func (b *StatusBar) Run() {
 	signalStream := make(chan Signal, 5)
-	go listenAndNotify(signalStream)
-	b.Udpate(signalStream)
+	modEvStreams := b.init()
+	go listenSignals(signalStream)
+	b.handleSignals(modEvStreams, signalStream)
 }
 
 // Event is a kind of signal sent to a worker.
@@ -37,14 +38,14 @@ const (
 	EV_EXEC = "EXEC" // don't wait for interval to finish, run now
 )
 
-type ModuleUpdateCallback func(out string)
+type UpdateCallback func(out string)
 
 // moduleUpdater is the function which periodically executes a module and
 // submits its output.
 // It can also receive and process events through the evStream, so if a module
 // is not to be periodically updated, it can be updated through a signal
 // instead.
-func moduleUpdater(mod Module, evStream chan Event, cb ModuleUpdateCallback) {
+func moduleUpdater(mod Module, evStream chan Event, cb UpdateCallback) {
 	if mod.UpdateInterval() > 0 {
 		select {
 		case ev := <-evStream:
@@ -56,7 +57,7 @@ func moduleUpdater(mod Module, evStream chan Event, cb ModuleUpdateCallback) {
 				return
 			}
 		case <-time.After(mod.UpdateInterval()):
-			log(INFO, "UPDATE_INTERVAL - updating module '%s'", mod.Name())
+			log(INFO, "INT_EXEC - updating module '%s'", mod.Name())
 			cb(mod.Exec())
 		}
 	} else {
@@ -72,77 +73,93 @@ func moduleUpdater(mod Module, evStream chan Event, cb ModuleUpdateCallback) {
 	go moduleUpdater(mod, evStream, cb) // respawn
 }
 
+// moduleUpdateNotification is a message sent when a Module has updated.
 type moduleUpdateNotification struct {
 	idx int
 	out string
 }
 
-// Update updates the status bar.
-func (b *StatusBar) Udpate(signalStream chan Signal) {
-	// mapping of module name to Module
+type moduleEventStream chan Event
+
+// mapping of module name to Module
+func (b *StatusBar) init() (modEvStreams map[string]moduleEventStream) {
 	modules := make(map[string]Module)
-	// channels through which modules receive events
-	moduleEventStreams := make(map[string]chan Event)
+	// module event streams -> channels through which modules receive events
+	modEvStreams = make(map[string]moduleEventStream)
 
 	// collect all modules
 	for _, m := range b.Modules {
-		mod := m.Name()
-		if _, ok := modules[mod]; ok {
-			log(WARN, "duplicate module name '%s'", mod)
+		name := m.Name()
+		if _, ok := modules[name]; ok {
+			log(WARN, "duplicate module name '%s'", name)
 		}
-		modules[mod] = m
-		moduleEventStreams[mod] = make(chan Event)
+		modules[name] = m
+		modEvStreams[name] = make(moduleEventStream)
 	}
 
-	outs := make([]string, len(b.Modules)) // outputs produced by modules
+	// list of module outputs
+	outs := make([]string, len(b.Modules))
 
 	// initially run all modules
 	for i, m := range b.Modules {
 		outs[i] = m.Exec()
 	}
-
+	// channel over which module update routines notify updates
 	var updateNotifyStream = make(chan moduleUpdateNotification)
-
-	// dispatch routines for each module
+	// dispatch a module update routine for each module
 	for i, mod := range b.Modules {
 		i := i
 		go moduleUpdater(
 			mod,
-			moduleEventStreams[mod.Name()],
+			modEvStreams[mod.Name()],
+			// when the module updates, send a notification to the bar updater
 			func(o string) { updateNotifyStream <- moduleUpdateNotification{i, o} },
 		)
 	}
-
-	// routine that collects module updates and updates the status bar
+	// dispatch routine that collects module updates and updates the status bar
 	go b.barUpdater(outs, updateNotifyStream)
+	return modEvStreams
+}
 
+// handleSignals handles submitted signals.
+func (b *StatusBar) handleSignals(
+	modEvStreams map[string]moduleEventStream,
+	signalStream chan Signal,
+) {
+	// listen for any signals submitted through the socket
 	for {
 		select {
 		case sig := <-signalStream:
-			moduleEventStreams[sig.Module] <- EV_EXEC
+			modEvStreams[sig.Module] <- EV_EXEC
 		}
 	}
 }
 
-// barUpdater updates the status-bar as module updated are submitted.
+// barUpdater updates the status-bar as module updates are submitted.
 // To prevent very frequent module updates, the update submissions are batched
 // and run in batches of at least `b.UpdateBatchMin` OR once every
 // `b.UpdateMinTime` if there are any updates (which ever comes first).
+//
+// If `b.UpdateBatchMin` is 1, then the bar is updated whenever a module update
+// is submitted.
 func (b *StatusBar) barUpdater(
 	outs []string,
 	updateNotifyStream chan moduleUpdateNotification,
 ) {
-	var batchedUpdates int
+	var batchedUpdates int // number of batched module updates
 	for {
 		select {
 		case update := <-updateNotifyStream:
 			outs[update.idx] = update.out
 			batchedUpdates++
+			// after receiving an update, if we have enough batched updates,
+			// update the bar
 			if batchedUpdates == b.UpdateBatchSize {
 				batchedUpdates = 0
 				b.collateAndUpdateBar(outs)
 			}
 		case <-time.After(b.UpdateMinTime):
+			// after UpdateMinTime, if there are any batched updates, update the bar
 			if batchedUpdates > 0 {
 				batchedUpdates = 0
 				b.collateAndUpdateBar(outs)
@@ -151,7 +168,10 @@ func (b *StatusBar) barUpdater(
 	}
 }
 
+// collateAndUpdateBar uses the given module outputs to form the status-bar
+// string and calls xsetroot to update it.
 func (b *StatusBar) collateAndUpdateBar(moduleOutputs []string) {
+	// compose bar
 	bar := " "
 	for i, s := range moduleOutputs {
 		bar += s
@@ -161,7 +181,7 @@ func (b *StatusBar) collateAndUpdateBar(moduleOutputs []string) {
 			bar += " "
 		}
 	}
-
+	// update
 	if err := xsetroot(bar); err != nil {
 		log(ERROR, "%s", err)
 	}
