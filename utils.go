@@ -1,15 +1,8 @@
 package main
 
 import (
-	"flag"
 	l "log"
 )
-
-var production = flag.Bool("prod", true, "set to 'false' to log excessively")
-
-func init() {
-	flag.Parse()
-}
 
 const (
 	EXE = "dwmstat"

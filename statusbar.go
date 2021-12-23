@@ -87,10 +87,10 @@ type moduleUpdateNotification struct {
 
 type moduleEventStream chan Event
 
-// mapping of module name to Module
 func (b *StatusBar) init() (modEvStreams map[string]moduleEventStream) {
+	// mapping of module name to Module
 	modules := make(map[string]Module)
-	// module event streams -> channels through which modules receive events
+	// module event streams = channels through which modules receive events
 	modEvStreams = make(map[string]moduleEventStream)
 
 	// collect all modules

@@ -7,11 +7,7 @@ ${EXE}: ${GO_SRC}
 	go build -o $@
 
 install: ${EXE}
-	# kill EXE if already running
-	bash -c 'pkill $^ || true'
-	cp $^ ../bin/
-	# spawn a new instance of EXE
-	${EXE} &>/dev/null  &
+	cp -f $^ ../bin/
 
 clean:
 	rm -rf ${EXE}

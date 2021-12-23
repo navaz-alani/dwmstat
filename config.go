@@ -1,6 +1,12 @@
 package main
 
-import "time"
+import (
+	"flag"
+	"time"
+)
+
+var production = flag.Bool("prod", true, "set to 'false' to log excessively")
+var SIG_SOCK = flag.String("sock", "", "name of socket to create for status bar signalling")
 
 const (
 	// shell used to execute scripted modules
