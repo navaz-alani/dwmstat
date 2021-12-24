@@ -7,7 +7,7 @@ ${EXE}: ${GO_SRC}
 	go build -o $@
 
 install: ${EXE}
-	cp -f $^ ../bin/
+	cp -f $^ ${DESTDIR}/bin/
 
 clean:
 	rm -rf ${EXE}

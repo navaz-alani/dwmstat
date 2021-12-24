@@ -14,6 +14,7 @@ const (
 )
 
 // Icons
+// These are font-awesome icons, however even emojis can be used - go nuts!
 const (
 	// DateModule
 	ICO_DATE = ""
@@ -37,7 +38,7 @@ const (
 
 // This is the bar which will be rendered.
 var statusBar StatusBar = StatusBar{
-	Sep: " | ",
+	Sep: " ",
 	Modules: []Module{
 		&CPUUsageModule,
 		&RAMUsageModule,
