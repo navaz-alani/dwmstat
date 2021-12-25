@@ -141,19 +141,42 @@ func batIcon(cap, stat string) string {
 	capacity, _ := strconv.ParseInt(cap, 10, 64)
 	switch {
 	case stat == STAT_CHARGING:
-		return ICO_BAT_POW
+		switch {
+		case 0 <= capacity && capacity <= 20:
+			return ICO_BAT_C20
+		case 20 < capacity && capacity <= 40:
+			return ICO_BAT_C40
+		case 40 < capacity && capacity <= 60:
+			return ICO_BAT_C60
+		case 60 < capacity && capacity <= 80:
+			return ICO_BAT_C80
+		default:
+			return ICO_BAT_C90
+		}
 	case stat == STAT_FULL:
 		return ICO_BAT_FULL
-	case capacity == 0:
-		return ICO_BAT_0Q
-	case 0 < capacity && capacity <= 25:
-		return ICO_BAT_1Q
-	case 25 < capacity && capacity <= 50:
-		return ICO_BAT_2Q
-	case 50 < capacity && capacity <= 75:
-		return ICO_BAT_3Q
+	case 0 <= capacity && capacity <= 5:
+		return ICO_BAT_00
+	case 5 < capacity && capacity <= 10:
+		return ICO_BAT_10
+	case 10 < capacity && capacity <= 20:
+		return ICO_BAT_20
+	case 20 < capacity && capacity <= 30:
+		return ICO_BAT_30
+	case 30 < capacity && capacity <= 40:
+		return ICO_BAT_40
+	case 40 < capacity && capacity <= 50:
+		return ICO_BAT_50
+	case 50 < capacity && capacity <= 60:
+		return ICO_BAT_60
+	case 60 < capacity && capacity <= 70:
+		return ICO_BAT_70
+	case 70 < capacity && capacity <= 80:
+		return ICO_BAT_80
+	case 80 < capacity && capacity <= 90:
+		return ICO_BAT_90
 	default:
-		return ICO_BAT_4Q
+		return ICO_BAT_100
 	}
 }
 
