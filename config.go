@@ -45,12 +45,20 @@ const (
 	// ResourcesModule
 	ICO_RES_RAM = ""
 	ICO_RES_CPU = ""
+
+	ICO_PKG_MAN = ""
 )
+
+var procIcons map[string]string = map[string]string{
+	"docker": "",
+}
 
 // This is the bar which will be rendered.
 var statusBar StatusBar = StatusBar{
 	Sep: " ",
 	Modules: []Module{
+		&AppIndicator,
+		&PkgManModule,
 		&CPUUsageModule,
 		&RAMUsageModule,
 		&DateModule{},

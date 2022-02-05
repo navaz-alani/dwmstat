@@ -234,6 +234,8 @@ var RAMUsageModule ExternalModule = ExternalModule{
 	},
 }
 
+//============================
+
 var CPUUsageModule ExternalModule = ExternalModule{
 	name:           "sys_cpu_usage",
 	command:        "sb_cpu_usage",
@@ -241,5 +243,44 @@ var CPUUsageModule ExternalModule = ExternalModule{
 	updateInterval: 5 * time.Second,
 	postProcess: func(out string) string {
 		return ICO_RES_CPU + " " + strings.TrimSpace(out)
+	},
+}
+
+//============================
+
+var PkgManModule ExternalModule = ExternalModule{
+	name:           "sys_pkg_manager",
+	command:        "sb_pkg_man",
+	kind:           EMK_SCR,
+	updateInterval: 1 * time.Hour,
+	postProcess: func(out string) string {
+		out = strings.TrimSpace(out)
+		if out == "0" {
+			return ""
+		}
+		return ICO_PKG_MAN + " " + out
+	},
+}
+
+//============================
+
+var AppIndicator ExternalModule = ExternalModule{
+	name:           "app_indicator",
+	command:        "sb_app_indicator",
+	kind:           EMK_SCR,
+	updateInterval: 5 * time.Second,
+	postProcess: func(out string) string {
+		out = strings.TrimSpace(out)
+		procs := strings.Split(out, "\n")
+		var ret string
+		for _, proc := range procs {
+			if ico, ok := procIcons[proc]; ok {
+				if ret != "" {
+					ret += " "
+				}
+				ret += ico
+			}
+		}
+		return ret
 	},
 }
